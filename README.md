@@ -1,24 +1,340 @@
+# Model Class Methods
+
 ## Objectives
 
-  1. Know when a knew model class method is needed
-  2. Create Class Model methods that act like scopes
+  1. Know when to use a model class method
+  2. Create model class methods that act like scopes
 
-## Overview
+## Lesson
 
-Blog example still. Pull the code from the last reading so that students can follow along! This one is going to be a codealong. So write tests for the finished "product" with the filtering and everything. On clone the tests shouldn't pass, but by copy/pasting everything in this reading they'll get it to pass. Put in a db/seeds that gets eneough seeded data to make it interesting
+We're gonna keep working on our blog application and adding more
+features, so make sure to follow along and try out the code for yourself as
+we go! 
 
-  * Sometimes you want to do some filtering of your posts. Let's make it so we can get Today's posts, Yesterday's posts. Or Let's filter by Author.
-  * All logic in views (feel the pain) Use the `params` hash in the view just to exaggerate things a bit. You can do that by doing this http://stackoverflow.com/a/20164155
-    * Create drop down for artist and date (just today/yesterday)
-    * Submit button that reloads the page with filter applied. 
-    * Woah that feels icky. Doing so much in views
-    * Where do we want to refactor this out?
-      * First try bringing it to the controller.
-      * With the controller it's still icky. The controller is reaching around the model to get straight to the DB. bad!
-      * Let's move it to model methods
-  * Model method. Class or Instance? (I know that is obvious but it's a hard concept. always can use repeating)
-    * Since we are operating on all of the instances of the model it can't be an instance method, must be class method
-    * Write the class methods to look like [this](https://github.com/learn-co-curriculum/arel-lab/blob/4d50ff04c7724d598efb4283b964ec45903c54fd/app/models/boat.rb#L23) That is the following lab so I wanna give them a fighting chance
-  * Refactor the views to use your new class methods without params in the views. So much better
+Make sure to run `rake db:seed` to get some starter posts and authors.
+You might be surprised to see the big names that definitely wrote these
+example blog posts!
 
+### Filtering Posts By Author
 
+We have our list of blog posts, which is great, but our readers would
+like to be able to filter the list by author, so let's do what every
+great blog does and pander to the masses!
+
+We want to start by adding some controls to our view to do the
+filtering:
+
+```erb
+# views\posts\index.html.erb
+
+<h1>Believe It Or Not I'm Blogging On Air</h1>
+# add this new code above the @posts.each loop
+<div>
+  <h3>Filter posts:</h3>
+  <%= form_tag("/posts", method: "get") do %>
+    <%= select_tag "author", options_from_collection_for_select(Author.all, "id", "name"), include_blank: true %>
+    <%= submit_tag "Filter" %>
+  <% end %>
+</div>
+# end new code
+
+<% @posts.each do |post| %>
+  # ...
+<% end %>
+```
+
+Now if we refresh `/posts`, we should see a select control with our
+authors in it, and a button. Pick one and hit "Filter"!
+
+Okay, nothing interesting happened. Rails is magic, but not *that*
+magic. We have to take that action and write the code to do the
+filtering.
+
+Since we're here, we'll just add it right into the view. At the top of
+our `index` view, let's do this:
+
+```
+# views\posts\index.html.erb
+
+# add this code here
+<% if !params[:author].blank? %>
+  <% @posts = Post.where(author: params[:author]) %>
+<% end %>
+# end new code
+
+<h1>Believe It Or Not I'm Blogging On Air</h1>
+# ...
+```
+
+And to ensure that our view has access to the controller's `params`
+hash, let's go into `posts_controller` and add this line near the top:
+
+```ruby
+# controllers\posts_controller.rb
+
+class PostsController < ApplicationController
+  helper_method :params
+
+  def index
+# ...
+end
+```
+
+**Note:** You can use `helper_method` in a controller to expose, or make
+available, a controller method in your view, but as we'll talk about
+soon, this isn't always a great idea.
+
+Okay. Let's reload our `/posts` page and try that filter again. It
+works! Now our readers can filter posts by author.
+
+### Filtering Posts By Date
+
+Job well done. But before we can even get another cup of coffee, we find
+out our readers want to be able to filter posts so they can see just the
+freshest hot takes.
+
+Let's get back into our view and add the new filter to our form:
+
+```erb
+# views\posts\index.html.erb
+
+<%= form_tag("/posts", method: "get") do %>
+  <%= select_tag "author", options_from_collection_for_select(Author.all, "id", "name"), include_blank: true %>
+  # new code
+  <%= select_tag "date", options_for_select(["Today", "Old News"]), include_blank: true %>
+  <%= submit_tag "Filter" %>
+<% end %>
+```
+
+And then let's activate that filter so the new code at the top of our
+view looks like this:
+
+```erb
+# views\posts\index.html.erb
+
+<% if !params[:author].blank? %>
+  <% @posts = Post.where(author: params[:author]) %>
+<% elsif !params[:date].blank? %>
+  <% if params[:date] == "Today" %>
+    <% @posts = Post.where("created_at >=?", Time.zone.today.beginning_of_day) %>
+  <% else %>
+    <% @posts = Post.where("created_at <?", Time.zone.today.beginning_of_day) %>
+  <% end %>
+<% end %>
+<h1>Believe It Or Not I'm Blogging On Air</h1>
+# ...
+```
+
+Reload `/posts` and try it out. If they choose an author, they can
+filter by author, or they can filter by date, or they can have it all.
+We've peased everyone!
+
+**Just Between Us:** We haven't pleased everyone because someone will
+inevitably want to now filter on the combination of an author and a
+date, and we could do that, but today, in this lesson, we're going to
+stand against the slings and arrows of [scope creep](https://en.wikipedia.org/wiki/Scope_creep)!
+
+### Refactoring Out Of The View
+
+Okay. We did it! We added our filters. But we understand that in MVC, we
+separate concerns, and put code in the right place, and looking at that
+view cluttered with so much *business logic* got us like:
+
+![Nick Miller NO](http://i.giphy.com/D0psmHNJTFdiE.gif)
+
+So it's time to do some refactoring.
+
+We have some pretty big red flags here:
+* View directly querying the database for posts *and* authors!
+* View reading `params`, which we had to go out of our way to allow from
+  the controller!
+* View overriding `@posts` which the controller is already creating,
+  fully *doubling* our database requests!
+
+Okay. Let's get to work. First, let's get into that view and kill that
+filter logic. Just straight up delete everything that comes before the
+`<h1>` so that it looks like this:
+
+```erb
+# views\posts\index.html.erb
+
+<h1>Believe It Or Not I'm Blogging On Air</h1>
+<div>
+  <h3>Filter posts:</h3>
+  <%= form_tag("/posts", method: "get") do %>
+    <%= select_tag "author", options_from_collection_for_select(@authors, "id", "name"), include_blank: true %>
+    <%= select_tag "date", options_for_select(["Today", "Old News"]), include_blank: true %>
+    <%= submit_tag "Filter" %>
+  <% end %>
+</div>
+<% @posts.each do |post| %>
+  <div>
+    <h2><%= post.title %></h2>
+    <h3>by: <%= link_to post.author.name, author_path(post.author) %></h3>
+    <p><%= post.description %></p>
+  </div>
+<% end %>
+```
+
+Don't forget to also change the `select_tag` options from `Author.all`
+to `@authors`, because our view shouldn't be directly querying the
+database from that, either. A view's concern is *presentation*. The
+controller should give it all the data it needs.
+
+Now let's get into our controller and repurpose our filter code so it
+will run there.
+
+First, let's get rid of that `helper_method :params` line. We don't need
+it anymore. Reading `params` is a controller concern, so we don't need
+to expose it to the view.
+
+Now let's dig into our `index` method and make some changes. First, we
+need to add this line to satisfy our author select control: `@authors =
+Author.all`. We're using the same code, just moving it to where it
+belongs.
+
+Then let's put in our filter code so that `index` looks like this:
+
+```ruby
+# controllers\posts_controller.rb
+
+def index
+  #provide a list of authors to the view for the filter control
+  @authors = Author.all
+
+  # filter the @posts list based on user input
+  if !params[:author].blank?
+    @posts = Post.where(author: params[:author])
+  elsif !params[:date].blank?
+    if params[:date] == "Today"
+      @posts = Post.where("created_at >=?", Time.zone.today.beginning_of_day)
+    else
+      @posts = Post.where("created_at <?", Time.zone.today.beginning_of_day)
+    end
+  else
+    # if not filters, show them all
+    @posts = Post.all
+  end
+end
+```
+
+Great! Now let's reload the `/posts` page and make sure everything still
+works.
+
+### Refactoring Database Logic Out Of The Controller
+
+This is looking much better. Our view is back to only dealing with
+presentation logic, and our controller is providing the right data. But
+we're still not there yet.
+
+If we think about separation of concerns, is the controller concerned
+with having deep knowledge of the database so that it can query it
+directly? No. All a controller wants to do is ask a model for what it
+needs in the simplest way possible.
+
+So having something that looks like this:
+```ruby
+@posts = Post.where("created_at >=?", Time.zone.today.beginning_of_day)
+```
+isn't the best application of MVC and separation of concerns. We want
+the model to know things like `"created_at >=?", Time.zone.today.beginning_of_day` and the controller to just know to ask for something more like `from_today`.
+
+So we need to move this into the model. Now the question becomes, is
+this a *class method* on the `Post` model itself, or is it an *instance
+method* on a specific `post`?
+
+Well, since we are going to be asking for multiple `post` instances from
+the database, we won't have an instance to begin with, so we'll need to
+use a class method.
+
+Class methods are commonly used on ActiveRecord models to encapsulate
+this type of custom query functionality, so let's do that now.
+
+First, we want to add one for the author filter. Let's get into
+`post.rb` and do it.
+
+```ruby
+# models\post.rb
+
+def self.by_author(author_id)
+  where(author: author_id)
+end
+```
+
+You'll notice that it's essentially the same code as we had in the
+controller, but it's now properly encapsulated in the model, so that a
+controller doesn't have to query the database, it just has to ask for
+posts `by_author`.
+
+So let's do that. Get back in the `posts_controller` and change the code
+to use our new class method:
+
+```ruby
+if !params[:author].blank?
+  @posts = Post.by_author(params[:author])
+elsif !params[:date].blank?
+# ...
+```
+
+**Top-tip:** There are always more ways to accomplish the same thing. You
+may be wondering why we didn't just `find` the author and return
+`author.posts`. That also would work. But when we think about
+constructing an application in a logical way, using principles like
+Separation of Concerns to guide us, we can conclude that the
+`posts_controller` is concerned with the `Post` model, so almost
+everything that controller does will probably flow through that model.
+
+Now that we have that done, we can reload our `/posts` page and make
+sure it's all still working.
+
+Okay, now let's give the same treatment to our date filter. We want to
+move the database code from the controller to the model, so let's add
+a couple of class methods to the `Post` model:
+
+```ruby
+# models\posts.rb
+
+def self.from_today
+  where("created_at >=?", Time.zone.today.beginning_of_day)
+end
+
+def self.old_news
+  where("created_at <?", Time.zone.today.beginning_of_day)
+end
+```
+
+And then let's update our controller to use them, so that our final
+`index` method should now look like this:
+
+```ruby
+def index
+  #provide a list of authors to the view for the filter control
+  @authors = Author.all
+
+  # filter the @posts list based on user input
+  if !params[:author].blank?
+    @posts = Post.by_author(params[:author])
+  elsif !params[:date].blank?
+    if params[:date] == "Today"
+      @posts = Post.from_today
+    else
+      @posts = Post.old_news
+    end
+  else
+    # if not filters, show them all
+    @posts = Post.all
+  end
+end
+```
+
+Let's test it out and see if it works. And for good measure, let's run
+`rspec` on the console and make sure our tests pass. All green? Good.
+
+![Nick Miller Approves](http://i.giphy.com/GlIRhM4n17XgY.gif)
+
+## Summary
+
+We've taken a look at how we could do some features in a few different
+ways, but by considering separation of concerns, sticking to MVC, and
+using class methods on our models, we can implement a search or filter
+feature in a clean, well-organized way.
