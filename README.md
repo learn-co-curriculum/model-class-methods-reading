@@ -3,7 +3,7 @@
 ## Objectives
 
   1. Know when to use a model class method
-  2. Create model class methods that act like scopes
+  2. Create model class methods for custom queries
 
 ## Lesson
 
@@ -265,6 +265,7 @@ You'll notice that it's essentially the same code as we had in the
 controller, but it's now properly encapsulated in the model, so that a
 controller doesn't have to query the database, it just has to ask for
 posts `by_author`.
+
 
 So let's do that. Get back in the `posts_controller` and change the code
 to use our new class method:
