@@ -1,5 +1,8 @@
 tags:
-  - tag1
+  - rails
+  - class methods
+  - mvc
+  - separation of concerns
 languages:
-  - language1
+  - ruby
 resources: 0
