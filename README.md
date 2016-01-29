@@ -339,3 +339,5 @@ We've taken a look at how we could do some features in a few different
 ways, but by considering separation of concerns, sticking to MVC, and
 using class methods on our models, we can implement a search or filter
 feature in a clean, well-organized way.
+
+<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading' title='Objectives'>Objectives</a> on Learn.co and start learning to code for free.</p>
