@@ -46,8 +46,8 @@ filtering:
 Now if we refresh `/posts`, we should see a select control with our
 authors in it, and a button. Pick one and hit "Filter"!
 
-Okay, nothing interesting happened. Rails is magic, but not *that*
-magic. We have to take that action and write the code to do the
+Okay, nothing interesting happened. Rails is magical, but not *that*
+magical. We have to take that action and write the code to do the
 filtering.
 
 Since we're here, we'll just add it right into the view. At the top of
@@ -340,4 +340,4 @@ ways, but by considering separation of concerns, sticking to MVC, and
 using class methods on our models, we can implement a search or filter
 feature in a clean, well-organized way.
 
-<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading' title='Objectives'>Objectives</a> on Learn.co and start learning to code for free.</p>
+<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading'>Model Class Methods</a> on Learn.co and start learning to code for free.</p>
