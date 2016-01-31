@@ -127,7 +127,7 @@ view looks like this:
 
 Reload `/posts` and try it out. If they choose an author, they can
 filter by author, or they can filter by date, or they can have it all.
-We've peased everyone!
+We've pleased everyone!
 
 **Just Between Us:** We haven't pleased everyone because someone will
 inevitably want to now filter on the combination of an author and a
@@ -340,4 +340,4 @@ ways, but by considering separation of concerns, sticking to MVC, and
 using class methods on our models, we can implement a search or filter
 feature in a clean, well-organized way.
 
-<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading' title='Objectives'>Objectives</a> on Learn.co and start learning to code for free.</p>
+<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading'>Model Class Methods</a> on Learn.co and start learning to code for free.</p>
