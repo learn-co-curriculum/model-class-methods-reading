@@ -7,22 +7,15 @@
 
 ## Lesson
 
-We're gonna keep working on our blog application and adding more
-features, so make sure to follow along and try out the code for yourself as
-we go! 
+We're gonna keep working on our blog application and adding more features, so make sure to follow along and try out the code for yourself as we go! 
 
-Make sure to run `rake db:seed` to get some starter posts and authors.
-You might be surprised to see the big names that definitely wrote these
-example blog posts!
+Make sure to run `rake db:seed` to get some starter posts and authors. You might be surprised to see the big names that definitely wrote these example blog posts!
 
 ### Filtering Posts by Author
 
-We have our list of blog posts, which is great, but our readers would
-like to be able to filter the list by author. Let's do what every
-great blog does and pander to the masses!
+We have our list of blog posts, which is great, but our readers would like to be able to filter the list by author. Let's do what every great blog does and pander to the masses!
 
-We want to start by adding some controls to our view to do the
-filtering:
+We want to start by adding some controls to our view to do the filtering:
 
 ```erb
 <!-- app/views/posts/index.html.erb -->
@@ -46,15 +39,11 @@ filtering:
 <% end %>
 ```
 
-Now if we refresh `/posts`, we should see a select control with our
-authors in it and a button. Pick an author and hit "Filter"!
+Now if we refresh `/posts`, we should see a select control with our authors in it and a button. Pick an author and hit "Filter"!
 
-Hm, nothing interesting happened. Rails is magical but not *that*
-magical. We have to take that action and write the code to do the
-filtering.
+Hm, nothing interesting happened. Rails is magical but not *that* magical. We have to take that action and write the code to do the filtering.
 
-Since we're here, we'll just add it right into the view. At the top of
-our `index` view, let's add the following:
+Since we're here, we'll just add it right into the view. At the top of our `index` view, let's add the following:
 
 ```erb
 <!-- app/views/posts/index.html.erb -->
@@ -70,8 +59,7 @@ our `index` view, let's add the following:
   ...
 ```
 
-And to ensure that our view has access to the controller's `params`
-hash, let's go into `posts_controller` and add this line near the top:
+And to ensure that our view has access to the controller's `params` hash, let's go into `posts_controller` and add this line near the top:
 
 ```ruby
 # app/controllers/posts_controller.rb
@@ -84,18 +72,13 @@ class PostsController < ApplicationController
     ...
 ```
 
-**Note:** You can use `helper_method` in a controller to expose, or make
-available, a controller method in your view, but, as we'll talk about
-soon, this isn't always a great idea.
+**Note:** You can use `helper_method` in a controller to expose, or make available, a controller method in your view, but, as we'll talk aboutsoon, this isn't always a great idea.
 
-Let's reload our `/posts` page and try that filter again. It
-works! Now our readers can filter posts by author.
+Let's reload our `/posts` page and try that filter again. It works! Now our readers can filter posts by author.
 
 ### Filtering Posts by Date
 
-Job well done. But before we can get even another cup of coffee, we find
-out our readers want to be able to filter posts by date so they can see the
-freshest hot takes.
+Job well done. But before we can get even another cup of coffee, we find out our readers want to be able to filter posts by date so they can see the freshest hot takes.
 
 Let's get back into our view and add the new filter to our form:
 
@@ -111,8 +94,7 @@ Let's get back into our view and add the new filter to our form:
 <% end %>
 ```
 
-And then let's activate that filter so the new code at the top of our
-view looks like this:
+And then let's activate that filter so the new code at the top of our view looks like this:
 
 ```erb
 <!-- app/views/posts/index.html.erb -->
@@ -132,20 +114,14 @@ view looks like this:
   ...
 ```
 
-Reload `/posts` and try it out. If they choose an author, they can
-filter by author, or they can filter by date, or they can have it all.
-We've pleased everyone!
+Reload `/posts` and try it out. If they choose an author, they can filter by author, or they can filter by date, or they can have it all. We've pleased everyone!
 
-**Just Between Us:** We haven't pleased everyone because someone will
-inevitably want to now filter on the combination of an author and a
-date. We could do that, but today, in this lesson, we're going to
+**Just Between Us:** We haven't pleased everyone because someone will inevitably want to now filter on the combination of an author and a date. We could do that, but today, in this lesson, we're going to
 stand against the slings and arrows of [scope creep](https://en.wikipedia.org/wiki/Scope_creep)!
 
 ### Refactoring out of the View
 
-Okay. We did it! We added our filters. But we understand that in MVC we
-separate concerns and put code in the right place. Looking at our current
-`posts#index` view cluttered with so much *business logic* got us like:
+Okay. We did it! We added our filters. But we understand that in MVC we separate concerns and put code in the right place. Looking at our current `posts#index` view cluttered with so much *business logic* got us like:
 
 ![Nick Miller NO](http://i.giphy.com/D0psmHNJTFdiE.gif)
 
@@ -153,14 +129,10 @@ So it's time to do some refactoring.
 
 We have some pretty big red flags here:
 * View directly querying the database for posts *and* authors!
-* View reading `params`, which we had to go out of our way to allow from
-  the controller!
-* View overriding `@posts`, which the controller is already creating,
-  fully *doubling* our database requests!
+* View reading `params`, which we had to go out of our way to allow from the controller!
+* View overriding `@posts`, which the controller is already creating, fully *doubling* our database requests!
 
-Okay. Let's get to work. First, let's dive back into the `posts#index` view
-and kill that filter logic. Just straight up delete everything that comes
-before the `<h1>` so that it looks like this:
+Okay. Let's get to work. First, let's dive back into the `posts#index` view and kill that filter logic. Just straight up delete everything that comes before the `<h1>` so that it looks like this:
 
 ```erb
 <!-- app/views/posts/index.html.erb -->
@@ -183,22 +155,13 @@ before the `<h1>` so that it looks like this:
 <% end %>
 ```
 
-Don't forget to also change the `select_tag` options from `Author.all`
-to `@authors` because our view shouldn't be directly querying the
-database for that, either. A view's concern is *presentation*. The
-controller should give it all the data it needs.
+Don't forget to also change the `select_tag` options from `Author.all` to `@authors` because our view shouldn't be directly querying the database for that, either. A view's concern is *presentation*. The controller should give it all the data it needs.
 
-Now let's get into our controller and repurpose our filter code so it
-will run there.
+Now let's get into our controller and repurpose our filter code so it will run there.
 
-First, let's get rid of that `helper_method :params` line. We don't need
-it anymore. Reading `params` is a controller concern, so we don't need
-to expose it to the views.
+First, let's get rid of that `helper_method :params` line. We don't need it anymore. Reading `params` is a controller concern, so we don't need to expose it to the views.
 
-Now let's dig into our `index` method and make some changes. First, we
-need to add this line to satisfy our author select control: `@authors =
-Author.all`. We're using the same code, just moving it to where it
-belongs.
+Now let's dig into our `index` method and make some changes. First, we need to add this line to satisfy our author select control: `@authors = Author.all`. We're using the same code, just moving it to where it belongs.
 
 Then let's put in our filter code so that `index` looks like this:
 
@@ -225,41 +188,27 @@ def index
 end
 ```
 
-Great! Now let's reload the `/posts` page and make sure everything still
-works.
+Great! Now let's reload the `/posts` page and make sure everything still works.
 
 ### Refactoring Database Logic out of the Controller
 
-This is looking much better. Our view is back to only dealing with
-presentation logic, and our controller is providing the right data. But
-we're still not there yet.
+This is looking much better. Our view is back to only dealing with presentation logic, and our controller is providing the right data. But we're still not there yet.
 
-If we think about separation of concerns, is the controller concerned
-with having deep knowledge of the database so that it can make queries
-directly? No. All a controller wants to do is ask a model for what it
-needs in the simplest way possible.
+If we think about separation of concerns, is the controller concerned with having deep knowledge of the database so that it can make queries directly? No. All a controller wants to do is ask a model for what it needs in the simplest way possible.
 
 So having something that looks like this...
 ```ruby
 @posts = Post.where("created_at >=?", Time.zone.today.beginning_of_day)
 ```
-...isn't the best application of MVC and separation of concerns. We want
-the model to know things like `"created_at >=?", Time.zone.today.beginning_of_day`
-and the controller to just ask for something more like `from_today`.
+...isn't the best application of MVC and separation of concerns. We want the model to know things like `"created_at >=?", Time.zone.today.beginning_of_day` and the controller to just ask for something more like `from_today`.
 
-So we need to move this into the model. Now, the question becomes: is
-this a *class method* on the `Post` model itself, or is it an *instance
-method* on a specific `post`?
+So we need to move this into the model. Now, the question becomes: is this a *class method* on the `Post` model itself, or is it an *instance method* on a specific `post`?
 
-Well, since we are going to be asking for multiple `post` instances from
-the database, we won't have an instance to begin with, so we'll need to
-use a class method.
+Well, since we are going to be asking for multiple `post` instances from the database, we won't have an instance to begin with, so we'll need to use a class method.
 
-Class methods are commonly used on ActiveRecord models to encapsulate
-this type of custom query functionality, so let's do that now.
+Class methods are commonly used on ActiveRecord models to encapsulate this type of custom query functionality, so let's do that now.
 
-First, we want to add one for the author filter. Let's dive into
-`post.rb` and get to work.
+First, we want to add one for the author filter. Let's dive into `post.rb` and get to work.
 
 ```ruby
 # app/models/post.rb
@@ -269,14 +218,10 @@ def self.by_author(author_id)
 end
 ```
 
-You'll notice that it's essentially the same code that we had in the
-controller, but it's now properly encapsulated in the model. This way, a
-controller doesn't have to query the database — it just has to ask for
-posts `by_author`.
+You'll notice that it's essentially the same code that we had in the controller, but it's now properly encapsulated in the model. This way, a controller doesn't have to query the database — it just has to ask for posts `by_author`.
 
 
-So let's do that. Get back in the `posts_controller`, and change the code
-to use our new class method:
+So let's do that. Get back in the `posts_controller`, and change the code to use our new class method:
 
 ```ruby
 # app/controllers/posts_controller.rb
@@ -288,20 +233,11 @@ elsif !params[:date].blank?
   ...
 ```
 
-**Top-tip:** There are always more ways to accomplish the same thing. You
-may be wondering why we didn't just `find` the author and return
-`author.posts`. That also would work. But when we think about
-constructing an application in a logical way, using principles like
-Separation of Concerns to guide us, we can conclude that the
-`posts_controller` is concerned with the `Post` model, so almost
-everything that controller does will probably flow through that model.
+**Top-tip:** There are always more ways to accomplish the same thing. You may be wondering why we didn't just `find` the author and return `author.posts`. That also would work. But when we think about constructing an application in a logical way, using principles like Separation of Concerns to guide us, we can conclude that the `posts_controller` is concerned with the `Post` model, so almost everything that controller does will probably flow through that model.
 
-Now that we have that done, we can reload our `/posts` page and make
-sure it's all still working.
+Now that we have that done, we can reload our `/posts` page and make sure it's all still working.
 
-Next, let's give the same treatment to our date filter. We want to
-move the database code from the controller to the model, so let's add
-a couple more class methods to the `Post` model:
+Next, let's give the same treatment to our date filter. We want to move the database code from the controller to the model, so let's add a couple more class methods to the `Post` model:
 
 ```ruby
 # app/models/posts.rb
@@ -317,8 +253,7 @@ def self.old_news
 end
 ```
 
-And then let's update our controller to use them. Our final
-`index` method should now look like this:
+And then let's update our controller to use them. Our final `index` method should now look like this:
 
 ```ruby
 # app/controllers/posts_controller.rb
@@ -343,16 +278,14 @@ def index
 end
 ```
 
-Let's test it out and see if it works. And for good measure, let's run
-`rspec` on the console and make sure our tests pass. All green? Good.
+Let's test it out and see if it works. And for good measure, let's run `rspec` on the console and make sure our tests pass. All green? Good.
 
 ![Nick Miller Approves](http://i.giphy.com/GlIRhM4n17XgY.gif)
 
 ## Summary
 
-We've taken a look at a few different ways to create some features, but
-the big takeaway is this: by considering the separation of concerns,
-sticking to MVC, and using class methods on our models, we were ultimately
-able to implement those features in a clean, well-organized way.
+We've taken a look at a few different ways to create some features, but the big takeaway is this: by considering the separation of concerns, sticking to MVC, and using class methods on our models, we were ultimately able to implement those features in a clean, well-organized way.
 
 <p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading'>Model Class Methods</a> on Learn.co and start learning to code for free.</p>
+
+<p class='util--hide'>View <a href='https://learn.co/lessons/model-class-methods-reading'>Model Class Methods</a> on Learn.co and start learning to code for free.</p>
