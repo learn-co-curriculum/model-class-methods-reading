@@ -2,20 +2,20 @@
 
 ## Objectives
 
-1. Know when to use a model class method
-2. Create model class methods for custom queries
+1.  Know when to use a model class method
+2.  Create model class methods for custom queries
 
 ## Lesson
 
 We're gonna keep working on our blog application and adding more
 features, so make sure to follow along and try out the code for yourself as
-we go! 
+we go!
 
 Make sure to run `rake db:seed` to get some starter posts and authors.
 You might be surprised to see the big names that definitely wrote these
 example blog posts!
 
-### Filtering Posts by Author
+#### Filtering Posts by Author
 
 We have our list of blog posts, which is great, but our readers would
 like to be able to filter the list by author. Let's do what every
@@ -42,14 +42,14 @@ filtering:
 <% @posts.each do |post| %>
 
   ...
-  
+
 <% end %>
 ```
 
 Now if we refresh `/posts`, we should see a select control with our
 authors in it and a button. Pick an author and hit "Filter"!
 
-Hm, nothing interesting happened. Rails is magical but not *that*
+Hm, nothing interesting happened. Rails is magical but not _that_
 magical. We have to take that action and write the code to do the
 filtering.
 
@@ -91,7 +91,7 @@ soon, this isn't always a great idea.
 Let's reload our `/posts` page and try that filter again. It
 works! Now our readers can filter posts by author.
 
-### Filtering Posts by Date
+#### Filtering Posts by Date
 
 Job well done. But before we can get even another cup of coffee, we find
 out our readers want to be able to filter posts by date so they can see the
@@ -104,7 +104,7 @@ Let's get back into our view and add the new filter to our form:
 
 <%= form_tag("/posts", method: "get") do %>
   <%= select_tag "author", options_from_collection_for_select(Author.all, "id", "name"), include_blank: true %>
-  
+
   <!-- new code -->
   <%= select_tag "date", options_for_select(["Today", "Old News"]), include_blank: true %>
   <%= submit_tag "Filter" %>
@@ -141,22 +141,23 @@ inevitably want to now filter on the combination of an author and a
 date. We could do that, but today, in this lesson, we're going to
 stand against the slings and arrows of [scope creep](https://en.wikipedia.org/wiki/Scope_creep)!
 
-### Refactoring out of the View
+#### Refactoring out of the View
 
 Okay. We did it! We added our filters. But we understand that in MVC we
 separate concerns and put code in the right place. Looking at our current
-`posts#index` view cluttered with so much *business logic* got us like:
+`posts#index` view cluttered with so much _business logic_ got us like:
 
 ![Nick Miller NO](http://i.giphy.com/D0psmHNJTFdiE.gif)
 
 So it's time to do some refactoring.
 
 We have some pretty big red flags here:
-* View directly querying the database for posts *and* authors!
-* View reading `params`, which we had to go out of our way to allow from
+
+- View directly querying the database for posts _and_ authors!
+- View reading `params`, which we had to go out of our way to allow from
   the controller!
-* View overriding `@posts`, which the controller is already creating,
-  fully *doubling* our database requests!
+- View overriding `@posts`, which the controller is already creating,
+  fully _doubling_ our database requests!
 
 Okay. Let's get to work. First, let's dive back into the `posts#index` view
 and kill that filter logic. Just straight up delete everything that comes
@@ -185,7 +186,7 @@ before the `<h1>` so that it looks like this:
 
 Don't forget to also change the `select_tag` options from `Author.all`
 to `@authors` because our view shouldn't be directly querying the
-database for that, either. A view's concern is *presentation*. The
+database for that, either. A view's concern is _presentation_. The
 controller should give it all the data it needs.
 
 Now let's get into our controller and repurpose our filter code so it
@@ -196,8 +197,7 @@ it anymore. Reading `params` is a controller concern, so we don't need
 to expose it to the views.
 
 Now let's dig into our `index` method and make some changes. First, we
-need to add this line to satisfy our author select control: `@authors =
-Author.all`. We're using the same code, just moving it to where it
+need to add this line to satisfy our author select control: `@authors = Author.all`. We're using the same code, just moving it to where it
 belongs.
 
 Then let's put in our filter code so that `index` looks like this:
@@ -228,7 +228,7 @@ end
 Great! Now let's reload the `/posts` page and make sure everything still
 works.
 
-### Refactoring Database Logic out of the Controller
+#### Refactoring Database Logic out of the Controller
 
 This is looking much better. Our view is back to only dealing with
 presentation logic, and our controller is providing the right data. But
@@ -240,16 +240,18 @@ directly? No. All a controller wants to do is ask a model for what it
 needs in the simplest way possible.
 
 So having something that looks like this...
+
 ```ruby
 @posts = Post.where("created_at >=?", Time.zone.today.beginning_of_day)
 ```
+
 ...isn't the best application of MVC and separation of concerns. We want
 the model to know things like `"created_at >=?", Time.zone.today.beginning_of_day`
 and the controller to just ask for something more like `from_today`.
 
 So we need to move this into the model. Now, the question becomes: is
-this a *class method* on the `Post` model itself, or is it an *instance
-method* on a specific `post`?
+this a _class method_ on the `Post` model itself, or is it an _instance
+method_ on a specific `post`?
 
 Well, since we are going to be asking for multiple `post` instances from
 the database, we won't have an instance to begin with, so we'll need to
@@ -273,7 +275,6 @@ You'll notice that it's essentially the same code that we had in the
 controller, but it's now properly encapsulated in the model. This way, a
 controller doesn't have to query the database — it just has to ask for
 posts `by_author`.
-
 
 So let's do that. Get back in the `posts_controller`, and change the code
 to use our new class method:
@@ -304,7 +305,7 @@ move the database code from the controller to the model, so let's add
 a couple more class methods to the `Post` model:
 
 ```ruby
-# app/models/posts.rb
+# app/models/post.rb
 
 ...
 
