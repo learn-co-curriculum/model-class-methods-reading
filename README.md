@@ -132,9 +132,8 @@ view looks like this:
   ...
 ```
 
-Reload `/posts` and try it out. If they choose an author, they can
-filter by author, or they can filter by date, or they can have it all.
-We've pleased everyone!
+Reload `/posts` and try it out. Our readers can filter by author, or 
+they can filter by date, or they can have it all. We've pleased everyone!
 
 **Just Between Us:** We haven't pleased everyone because someone will
 inevitably want to now filter on the combination of an author and a
