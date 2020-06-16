@@ -354,5 +354,3 @@ We've taken a look at a few different ways to create some features, but
 the big takeaway is this: by considering the separation of concerns,
 sticking to MVC, and using class methods on our models, we were ultimately
 able to implement those features in a clean, well-organized way.
-
-<p data-visibility='hidden'>View <a href='https://learn.co/lessons/model-class-methods-reading'>Model Class Methods</a> on Learn.co and start learning to code for free.</p>
